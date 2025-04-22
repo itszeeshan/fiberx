@@ -3,93 +3,58 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"os"
-	"path/filepath"
 	"strings"
 
+	"github.com/itszeeshan/fiberx/internal/generator"
 	"github.com/spf13/cobra"
 )
 
-var features []string
+var withFeatures string
 
 var newCmd = &cobra.Command{
-	Use:   "new [name]",
-	Short: "Scaffold a new GoFiber project",
+	Use:   "new [project-name]",
+	Short: "Create a new Fiber project",
 	Args:  cobra.ExactArgs(1),
-	Run:   createProject,
+	Run: func(cmd *cobra.Command, args []string) {
+		projectName := args[0]
+		features := strings.Split(withFeatures, ",")
+
+		// Validate features
+		validFeatures := map[string]bool{
+			"postgres": true,
+			"viper":    true,
+			"redis":    true,
+			"jwt":      true,
+		}
+
+		featureMap := make(map[string]bool)
+		for _, f := range features {
+			f = strings.TrimSpace(f)
+			if f == "" {
+				continue
+			}
+			if !validFeatures[f] {
+				log.Fatalf("Invalid feature: %s. Valid options: postgres,viper,redis,jwt", f)
+			}
+			featureMap[f] = true
+		}
+
+		config := generator.ProjectConfig{
+			Name:     projectName,
+			Features: featureMap,
+		}
+
+		if err := generator.ScaffoldProject(config); err != nil {
+			log.Fatalf("Error creating project: %v", err)
+		}
+
+		fmt.Printf("✅ Successfully created project: %s\n", projectName)
+		fmt.Printf("Features enabled: %v\n", features)
+	},
 }
 
 func init() {
-	newCmd.Flags().StringSliceVarP(&features, "with", "w", []string{}, "Optional features (e.g. postgres, redis)")
+	newCmd.Flags().StringVarP(&withFeatures, "with", "w", "",
+		"Comma-separated list of features to enable (postgres,viper,redis,jwt)")
 	rootCmd.AddCommand(newCmd)
-}
-
-func createProject(cmd *cobra.Command, args []string) {
-	name := args[0]
-	dirs := []string{
-		"cmd",
-		"handlers",
-		"middlewares",
-		"services",
-		"config",
-	}
-
-	fmt.Println("🔧 Creating project:", name)
-
-	if err := os.Mkdir(name, 0755); err != nil {
-		log.Fatalf("Failed to create project folder: %v", err)
-	}
-
-	for _, dir := range dirs {
-		if err := os.MkdirAll(filepath.Join(name, dir), 0755); err != nil {
-			log.Fatalf("Failed to create directory %s: %v", dir, err)
-		}
-	}
-
-	createMain(name)
-	createGoMod(name)
-	createGitignore(name)
-	createReadme(name)
-
-	fmt.Println("✅ Project scaffolded successfully!")
-}
-
-func createMain(name string) {
-	const mainTpl = `package main
-
-import (
-	"log"
-
-	"github.com/gofiber/fiber/v2"
-)
-
-func main() {
-	app := fiber.New()
-
-	// TODO: Register routes
-
-	log.Fatal(app.Listen(":3000"))
-}
-`
-	writeFile(filepath.Join(name, "cmd", "main.go"), mainTpl)
-}
-
-func createGoMod(name string) {
-	modTpl := fmt.Sprintf("module %s\n\ngo 1.21\n\nrequire github.com/gofiber/fiber/v2 v2.50.0\n", name)
-	writeFile(filepath.Join(name, "go.mod"), modTpl)
-}
-
-func createGitignore(name string) {
-	writeFile(filepath.Join(name, ".gitignore"), "bin/\n.env\n*.log\n")
-}
-
-func createReadme(name string) {
-	content := fmt.Sprintf("# %s\n\nGenerated with FiberX ⚡", strings.Title(name))
-	writeFile(filepath.Join(name, "README.md"), content)
-}
-
-func writeFile(path, content string) {
-	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
-		log.Fatalf("Failed to write file %s: %v", path, err)
-	}
 }

@@ -1,0 +1,40 @@
+package config
+
+import (
+	"fmt"
+
+	"github.com/spf13/viper"
+)
+
+// AppConfig holds application-level settings (e.g., server port)
+type AppConfig struct {
+	Port string `mapstructure:"APP_PORT"`
+}
+
+// Config holds all environment-driven configurations
+type Config struct {
+	App AppConfig
+	{{if .Features.postgres}}DB DatabaseConfig{{end}} // Optional: include DB config if enabled via template
+}
+
+// Load reads environment variables from `.env` and maps them to the Config struct
+func Load() (*Config, error) {
+	// Tell Viper to look for a .env file in the root directory
+	viper.SetConfigFile(".env")
+
+	// Enable reading environment variables directly (e.g., from shell or container)
+	viper.AutomaticEnv()
+
+	// Read the .env file (non-fatal if it doesn't exist, optional to change this)
+	if err := viper.ReadInConfig(); err != nil {
+		return nil, fmt.Errorf("failed to read config: %w", err)
+	}
+
+	// Initialize config struct and bind env values
+	var cfg Config
+	if err := viper.Unmarshal(&cfg); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+	}
+
+	return &cfg, nil
+}

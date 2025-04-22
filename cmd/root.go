@@ -17,6 +17,15 @@ for Fiber projects without enforcing rigid structures or frameworks.`,
 	},
 }
 
+var addCmd = &cobra.Command{
+	Use:   "add",
+	Short: "Add components to your project",
+}
+
+func init() {
+	rootCmd.AddCommand(addCmd)
+}
+
 // Execute is the main entry point for the CLI
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {

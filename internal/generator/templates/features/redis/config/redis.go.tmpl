@@ -1,0 +1,39 @@
+package config
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/redis/go-redis/v9"
+)
+
+var ctx = context.Background()
+
+// RedisConfig holds Redis connection configuration.
+type RedisConfig struct {
+	Host     string
+	Port     string
+	Password string
+	DB       int
+}
+
+// Addr returns the full address of the Redis instance.
+func (cfg *RedisConfig) Addr() string {
+	return fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
+}
+
+// NewRedisClient initializes and returns a Redis client using the provided config.
+// It panics if the connection fails.
+func NewRedisClient(cfg *RedisConfig) *redis.Client {
+	client := redis.NewClient(&redis.Options{
+		Addr:     cfg.Addr(),
+		Password: cfg.Password,
+		DB:       cfg.DB,
+	})
+
+	if err := client.Ping(ctx).Err(); err != nil {
+		panic(fmt.Sprintf("failed to connect to Redis at %s: %v", cfg.Addr(), err))
+	}
+
+	return client
+}

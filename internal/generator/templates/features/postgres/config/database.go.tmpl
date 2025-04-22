@@ -1,0 +1,40 @@
+package config
+
+import (
+	"fmt"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+)
+
+// DatabaseConfig holds the necessary fields to connect to a PostgreSQL DB
+type DatabaseConfig struct {
+	Host     string
+	User     string
+	Password string
+	Name     string
+	Port     string
+}
+
+// InitDB initializes and returns a GORM DB instance connected to PostgreSQL
+func InitDB(cfg DatabaseConfig) (*gorm.DB, error) {
+	// Construct the DSN (Data Source Name) from config values
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+		cfg.Host,
+		cfg.User,
+		cfg.Password,
+		cfg.Name,
+		cfg.Port,
+	)
+
+	// Open the connection using GORM and the Postgres driver
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		// Return a wrapped error for better debugging
+		return nil, fmt.Errorf("failed to connect to database: %w", err)
+	}
+
+	// Return the initialized *gorm.DB
+	return db, nil
+}
