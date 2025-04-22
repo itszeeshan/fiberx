@@ -36,6 +36,9 @@ func init() {
 		"Target architecture (amd64, arm64)")
 	buildCmd.Flags().StringVarP(&buildVersion, "version", "", "0.1.0",
 		"Application version")
+	buildCmd.Flags().Bool("docker", false, "Build Docker image")
+	buildCmd.Flags().Bool("compress", false, "Compress binary with upx")
+	buildCmd.Flags().String("output", "", "Custom output name")
 	rootCmd.AddCommand(buildCmd)
 }
 
