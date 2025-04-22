@@ -8,6 +8,7 @@ import (
 	"text/template"
 )
 
+// Handler template with dynamic method name handling
 const handlerTemplate = `package handlers
 
 import (
@@ -44,19 +45,25 @@ type HandlerConfig struct {
 	Methods   []string
 }
 
+func formatMethodName(method string) string {
+	return strings.Title(strings.ToLower(method))
+}
+
 func GenerateHandler(name string, methods []string) error {
+	for i, method := range methods {
+		methods[i] = formatMethodName(method)
+	}
+
 	cfg := HandlerConfig{
 		Name:      strings.Title(name),
 		RouteName: strings.ToLower(name),
 		Methods:   methods,
 	}
 
-	// Create handlers directory if not exists
 	if err := os.MkdirAll("handlers", 0755); err != nil {
 		return fmt.Errorf("failed to create handlers directory: %w", err)
 	}
 
-	// Create handler file
 	path := filepath.Join("handlers", fmt.Sprintf("%s_handler.go", strings.ToLower(name)))
 	file, err := os.Create(path)
 	if err != nil {
@@ -64,7 +71,6 @@ func GenerateHandler(name string, methods []string) error {
 	}
 	defer file.Close()
 
-	// Parse and execute template
 	tmpl := template.Must(template.New("handler").Parse(handlerTemplate))
 	if err := tmpl.Execute(file, cfg); err != nil {
 		return fmt.Errorf("template execution failed: %w", err)
