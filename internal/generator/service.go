@@ -19,14 +19,20 @@ type ServiceConfig struct {
 const serviceTemplate = `package services
 
 import (
-	"context"
 	{{- if .DBType}}
 	"gorm.io/gorm"
 	{{- end}}
 	{{- if .WithRedis}}
+	"context"
 	"github.com/redis/go-redis/v9"
 	{{- end}}
 )
+
+{{if .DBType}}
+type {{.Name | title}} struct {
+	// Add your model fields here
+}
+{{end}}
 
 type {{.Name | title}}Service struct {
 	{{- if .DBType}}
@@ -50,6 +56,8 @@ func New{{.Name | title}}Service(
 		{{- end}}
 	}
 }
+
+{{if .DBType}}
 {{if hasMethod .Methods "crud"}}
 // CRUD Operations
 func (s *{{.Name | title}}Service) Create(item interface{}) error {
@@ -60,7 +68,7 @@ func (s *{{.Name | title}}Service) GetByID(id uint, out interface{}) error {
 	return s.db.First(out, id).Error
 }
 
-func (s *{{.Name | title}}Service) Update(id uint, updates interface{}, out interface{}) error {
+func (s *{{.Name | title}}Service) Update(id uint, updates interface{}) error {
 	return s.db.Model(out).Where("id = ?", id).Updates(updates).Error
 }
 
@@ -68,26 +76,40 @@ func (s *{{.Name | title}}Service) Delete(id uint) error {
 	return s.db.Delete(&{{.Name | title}}{}, id).Error
 }
 {{end}}
-{{if hasMethod .Methods "create"}}
-func (s *{{.Name | title}}Service) Create(item interface{}) error {
+
+{{range .Methods}}
+{{if eq . "create"}}
+func (s *{{$.Name | title}}Service) Create(item interface{}) error {
 	return s.db.Create(item).Error
 }
 {{end}}
-{{if hasMethod .Methods "read"}}
-func (s *{{.Name | title}}Service) GetByID(id uint, out interface{}) error {
+
+{{if eq . "read"}}
+func (s *{{$.Name | title}}Service) GetByID(id uint, out interface{}) error {
 	return s.db.First(out, id).Error
 }
 {{end}}
-{{if hasMethod .Methods "update"}}
-func (s *{{.Name | title}}Service) Update(id uint, updates interface{}, out interface{}) error {
+
+{{if eq . "update"}}
+func (s *{{$.Name | title}}Service) Update(id uint, updates interface{}) error {
 	return s.db.Model(out).Where("id = ?", id).Updates(updates).Error
 }
 {{end}}
-{{if hasMethod .Methods "delete"}}
-func (s *{{.Name | title}}Service) Delete(id uint) error {
-	return s.db.Delete(&{{.Name | title}}{}, id).Error
+
+{{if eq . "delete"}}
+func (s *{{$.Name | title}}Service) Delete(id uint) error {
+	return s.db.Delete(&{{$.Name | title}}{}, id).Error
 }
 {{end}}
+{{end}}
+{{else}}
+// Business logic methods
+func (s *{{.Name | title}}Service) SampleMethod() error {
+	// Implement your business logic
+	return nil
+}
+{{end}}
+
 {{if .WithRedis}}
 // Redis Operations
 var ctx = context.Background()

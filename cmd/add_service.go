@@ -43,9 +43,9 @@ var addServiceCmd = &cobra.Command{
 func init() {
 	addCmd.AddCommand(addServiceCmd)
 
-	addServiceCmd.Flags().StringVarP(&serviceDB, "db", "d", "postgres",
+	addServiceCmd.Flags().StringVarP(&serviceDB, "db", "d", "", // Changed default to empty
 		"Database type (postgres, mysql, sqlite)")
-	addServiceCmd.Flags().StringSliceVarP(&serviceMethods, "methods", "m", []string{"crud"},
+	addServiceCmd.Flags().StringSliceVarP(&serviceMethods, "methods", "m", []string{}, // Empty default
 		"Comma-separated list of methods to generate (crud, create, read, update, delete)")
 	addServiceCmd.Flags().BoolVarP(&serviceRedis, "redis", "r", false,
 		"Add Redis caching support")
