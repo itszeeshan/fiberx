@@ -25,13 +25,13 @@ func ScaffoldProject(config ProjectConfig) error {
 		return fmt.Errorf("failed to create project directory: %w", err)
 	}
 
-	if err := processTemplates("templates/base", config); err != nil {
+	if err := ProcessTemplates("templates/base", config); err != nil {
 		return fmt.Errorf("failed to process base templates: %w", err)
 	}
 
 	for feature := range config.Features {
 		featurePath := filepath.Join("templates/features", feature)
-		if err := processTemplates(featurePath, config); err != nil {
+		if err := ProcessTemplates(featurePath, config); err != nil {
 			return fmt.Errorf("failed to process %s templates: %w", feature, err)
 		}
 	}
@@ -43,7 +43,7 @@ func ScaffoldProject(config ProjectConfig) error {
 	return nil
 }
 
-func processTemplates(templateDir string, cfg ProjectConfig) error {
+func ProcessTemplates(templateDir string, cfg ProjectConfig) error {
 	return fs.WalkDir(templateFS, templateDir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
 			return err
