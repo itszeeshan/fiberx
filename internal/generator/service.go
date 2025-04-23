@@ -6,56 +6,143 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+	"unicode"
 )
+
+type ServiceConfig struct {
+	Name      string
+	DBType    string
+	Methods   []string
+	WithRedis bool
+}
 
 const serviceTemplate = `package services
 
 import (
-	{{if .WithDB}}"gorm.io/gorm"{{end}}
+	"context"
+	{{- if .DBType}}
+	"gorm.io/gorm"
+	{{- end}}
+	{{- if .WithRedis}}
+	"github.com/redis/go-redis/v9"
+	{{- end}}
 )
 
-type {{.Name}}Service struct {
-	{{if .WithDB}}db *gorm.DB{{end}}
+type {{.Name | title}}Service struct {
+	{{- if .DBType}}
+	db *gorm.DB
+	{{- end}}
+	{{- if .WithRedis}}
+	redis *redis.Client
+	{{- end}}
 }
 
-func New{{.Name}}Service({{if .WithDB}}db *gorm.DB{{end}}) *{{.Name}}Service {
-	return &{{.Name}}Service{
-		{{if .WithDB}}db: db,{{end}}
+func New{{.Name | title}}Service(
+	{{- if .DBType}}db *gorm.DB{{if .WithRedis}}, {{end}}{{end}}
+	{{- if .WithRedis}}redis *redis.Client{{end}}
+) *{{.Name | title}}Service {
+	return &{{.Name | title}}Service{
+		{{- if .DBType}}
+		db: db,
+		{{- end}}
+		{{- if .WithRedis}}
+		redis: redis,
+		{{- end}}
 	}
 }
-
-// Add your business logic methods below
-`
-
-type ServiceConfig struct {
-	Name   string
-	WithDB bool
+{{if hasMethod .Methods "crud"}}
+// CRUD Operations
+func (s *{{.Name | title}}Service) Create(item interface{}) error {
+	return s.db.Create(item).Error
 }
 
-func GenerateService(serviceName string) error {
-	cfg := ServiceConfig{
-		Name:   strings.Title(serviceName),
-		WithDB: true, // Can be configurable via flags
+func (s *{{.Name | title}}Service) GetByID(id uint, out interface{}) error {
+	return s.db.First(out, id).Error
+}
+
+func (s *{{.Name | title}}Service) Update(id uint, updates interface{}, out interface{}) error {
+	return s.db.Model(out).Where("id = ?", id).Updates(updates).Error
+}
+
+func (s *{{.Name | title}}Service) Delete(id uint) error {
+	return s.db.Delete(&{{.Name | title}}{}, id).Error
+}
+{{end}}
+{{if hasMethod .Methods "create"}}
+func (s *{{.Name | title}}Service) Create(item interface{}) error {
+	return s.db.Create(item).Error
+}
+{{end}}
+{{if hasMethod .Methods "read"}}
+func (s *{{.Name | title}}Service) GetByID(id uint, out interface{}) error {
+	return s.db.First(out, id).Error
+}
+{{end}}
+{{if hasMethod .Methods "update"}}
+func (s *{{.Name | title}}Service) Update(id uint, updates interface{}, out interface{}) error {
+	return s.db.Model(out).Where("id = ?", id).Updates(updates).Error
+}
+{{end}}
+{{if hasMethod .Methods "delete"}}
+func (s *{{.Name | title}}Service) Delete(id uint) error {
+	return s.db.Delete(&{{.Name | title}}{}, id).Error
+}
+{{end}}
+{{if .WithRedis}}
+// Redis Operations
+var ctx = context.Background()
+
+func (s *{{.Name | title}}Service) CacheGet(key string) (string, error) {
+	return s.redis.Get(ctx, key).Result()
+}
+
+func (s *{{.Name | title}}Service) CacheSet(key string, value interface{}) error {
+	return s.redis.Set(ctx, key, value, 0).Err()
+}
+{{end}}`
+
+func GenerateService(config ServiceConfig) error {
+	funcMap := template.FuncMap{
+		"title": title,
+		"hasMethod": func(methods []string, target string) bool {
+			return hasMethod(methods, target)
+		},
 	}
 
-	// Create services directory if not exists
 	if err := os.MkdirAll("services", 0755); err != nil {
 		return fmt.Errorf("failed to create services directory: %w", err)
 	}
 
-	// Create service file
-	path := filepath.Join("services", strings.ToLower(serviceName)+"_service.go")
+	tmpl := template.Must(template.New("service").Funcs(funcMap).Parse(serviceTemplate))
+
+	path := filepath.Join("services", strings.ToLower(config.Name)+"_service.go")
 	file, err := os.Create(path)
 	if err != nil {
 		return fmt.Errorf("failed to create service file: %w", err)
 	}
 	defer file.Close()
 
-	// Parse and execute template
-	tmpl := template.Must(template.New("service").Parse(serviceTemplate))
-	if err := tmpl.Execute(file, cfg); err != nil {
+	if err := tmpl.Execute(file, config); err != nil {
 		return fmt.Errorf("template execution failed: %w", err)
 	}
 
 	return nil
+}
+
+func hasMethod(methods []string, target string) bool {
+	for _, method := range methods {
+		if strings.EqualFold(method, target) {
+			return true
+		}
+	}
+	return false
+}
+
+func title(s string) string {
+	if s == "" {
+		return ""
+	}
+	runes := []rune(s)
+	runes[0] = unicode.ToUpper(runes[0])
+	return string(runes)
 }
