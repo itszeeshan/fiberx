@@ -57,6 +57,7 @@ func New{{.Name | title}}Service(
 	}
 }
 
+{{if .DBType}}
 {{if hasMethod .Methods "crud"}}
 // CRUD Operations
 func (s *{{.Name | title}}Service) Create(item interface{}) error {
@@ -68,7 +69,7 @@ func (s *{{.Name | title}}Service) GetByID(id uint, out interface{}) error {
 }
 
 func (s *{{.Name | title}}Service) Update(id uint, updates interface{}) error {
-	return s.db.Model(out).Where("id = ?", id).Updates(updates).Error
+	return s.db.Model(updates).Where("id = ?", id).Updates(updates).Error
 }
 
 func (s *{{.Name | title}}Service) Delete(id uint) error {
@@ -91,7 +92,7 @@ func (s *{{$.Name | title}}Service) GetByID(id uint, out interface{}) error {
 
 {{if eq . "update"}}
 func (s *{{$.Name | title}}Service) Update(id uint, updates interface{}) error {
-	return s.db.Model(out).Where("id = ?", id).Updates(updates).Error
+	return s.db.Model(updates).Where("id = ?", id).Updates(updates).Error
 }
 {{end}}
 
@@ -99,6 +100,7 @@ func (s *{{$.Name | title}}Service) Update(id uint, updates interface{}) error {
 func (s *{{$.Name | title}}Service) Delete(id uint) error {
 	return s.db.Delete(&{{$.Name | title}}{}, id).Error
 }
+{{end}}
 {{end}}
 {{else}}
 // Business logic methods
