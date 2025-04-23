@@ -57,7 +57,6 @@ func New{{.Name | title}}Service(
 	}
 }
 
-{{if .DBType}}
 {{if hasMethod .Methods "crud"}}
 // CRUD Operations
 func (s *{{.Name | title}}Service) Create(item interface{}) error {
@@ -100,7 +99,6 @@ func (s *{{$.Name | title}}Service) Update(id uint, updates interface{}) error {
 func (s *{{$.Name | title}}Service) Delete(id uint) error {
 	return s.db.Delete(&{{$.Name | title}}{}, id).Error
 }
-{{end}}
 {{end}}
 {{else}}
 // Business logic methods
