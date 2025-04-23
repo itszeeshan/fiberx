@@ -36,12 +36,12 @@ func isAirInstalled() bool {
 }
 
 func installAir() {
-	cmd := exec.Command("go", "install", "github.com/cosmtrek/air@latest")
+	cmd := exec.Command("go", "install", "github.com/air-verse/air@latest")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
 	if err := cmd.Run(); err != nil {
-		log.Fatal("❌ Failed to install Air. Please install manually: go install github.com/cosmtrek/air@latest")
+		log.Fatal("❌ Failed to install Air. Please install manually: go install github.com/air-verse/air@latest")
 	}
 }
 
