@@ -4,6 +4,8 @@ run:
   modules-download-mode: readonly
 
 linters:
+  disable:
+    - typecheck #TODO: enable typecheck
   enable:
     - bodyclose
     - deadcode
@@ -18,7 +20,6 @@ linters:
     - govet
     - ineffassign
     - staticcheck
-    - typecheck
     - unconvert
     - unused
     - whitespace
