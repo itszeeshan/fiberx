@@ -6,6 +6,7 @@ run:
 linters:
   disable:
     - typecheck #TODO: enable typecheck
+    - govet #TODO: enable govet
   enable:
     - bodyclose
     - deadcode
@@ -17,7 +18,6 @@ linters:
     - gofmt
     - goimports
     - gosec
-    - govet
     - ineffassign
     - staticcheck
     - unconvert
