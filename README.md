@@ -1,4 +1,4 @@
-# ⚡ FiberX CLI - ⚠️ WARNING: NOT READY FOR PRODUCTION APPLICATIONS YET! PLEASE DO CHECK AGAIN LATER! STAR IT SO YOU DONT MISS OUT :)
+# ⚡ FiberX CLI - ⚠️ WARNING: NOT READY FOR PRODUCTION APPLICATIONS YET! PLEASE DO CHECK AGAIN LATER! STAR IT SO YOU DONT MISS OUT :) YOU CAN USE CORE COMMANDS JUST TO TEST, THOSE ARE READY BUT STILL THERE MIGHT BE EDGE CASES AS I'VEN'T WROTE ANY TEST YET(PS: I KNOW THIS IS BAD 😄). WOULD LOVE A FEEDBACK ❤️
 
 **Speed up GoFiber development without the magic.**  
 FiberX is a CLI tool that generates clean, idiomatic Go code for your [Fiber](https://github.com/gofiber/fiber) projects — so you can focus on business logic, not boilerplate.
